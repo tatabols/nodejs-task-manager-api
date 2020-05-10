@@ -11,6 +11,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 //app.use(morgan('dev'));
+
 app.use(express.json());
 app.use(userRouter);
 app.use(taskRouter);
@@ -18,3 +19,6 @@ app.use(taskRouter);
 app.listen(port, (req, res) => {
   console.log('server running in port ' + port);
 });
+
+const Task = require('./models/task');
+const User = require('./models/user');

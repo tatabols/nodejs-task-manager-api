@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const Task = require('../models/task');
 
 const userSchema = new mongoose.Schema({
   name: { type: String },
@@ -14,6 +16,7 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
+    unique: true,
     required: true,
     lowercase: true,
     trim: true,
@@ -35,8 +38,68 @@ const userSchema = new mongoose.Schema({
       }
     },
   },
+  tokens: [
+    {
+      token: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
 });
 
+userSchema.pre('remove', async function (next) {
+  const user = this;
+  await Task.deleteMany({ owner: user._id });
+  next();
+});
+
+userSchema.virtual('tasks', {
+  ref: 'Task',
+  localField: '_id',
+  foreignField: 'owner',
+});
+
+// generate public user profile
+userSchema.methods.toJSON = function () {
+  const user = this;
+
+  const userObject = user.toObject();
+
+  delete userObject.tokens;
+  delete userObject.password;
+
+  return userObject;
+};
+
+//generate token
+userSchema.methods.generateAuthToken = async function () {
+  const user = this;
+  const token = jwt.sign({ _id: user._id.toString() }, 'secretkey');
+
+  user.tokens = user.tokens.concat({ token });
+  await user.save();
+  return token;
+};
+
+//check user credentials
+userSchema.statics.findByCredentials = async (email, password) => {
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new Error('Unable to login');
+  }
+
+  const isValidCrendentials = await bcrypt.compare(password, user.password);
+
+  if (!isValidCrendentials) {
+    throw new Error('Unable to login');
+  }
+
+  return user;
+};
+
+//hash password
 userSchema.pre('save', async function (next) {
   const user = this;
 
