@@ -4,49 +4,54 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Task = require('../models/task');
 
-const userSchema = new mongoose.Schema({
-  name: { type: String },
-  age: {
-    type: Number,
-    validate(value) {
-      if (value < 0) {
-        throw new Error('Age must be greater than 0.');
-      }
-    },
-  },
-  email: {
-    type: String,
-    unique: true,
-    required: true,
-    lowercase: true,
-    trim: true,
-    validate(value) {
-      validator.con;
-      if (!validator.isEmail(value)) {
-        throw new Error('Invalid email.');
-      }
-    },
-  },
-  password: {
-    type: String,
-    minlength: 6,
-    trim: true,
-    required: true,
-    validate(value) {
-      if (value === 'password') {
-        throw new Error('Password cannot be password.');
-      }
-    },
-  },
-  tokens: [
-    {
-      token: {
-        type: String,
-        required: true,
+const userSchema = new mongoose.Schema(
+  {
+    name: { type: String },
+    age: {
+      type: Number,
+      validate(value) {
+        if (value < 0) {
+          throw new Error('Age must be greater than 0.');
+        }
       },
     },
-  ],
-});
+    email: {
+      type: String,
+      unique: true,
+      required: true,
+      lowercase: true,
+      trim: true,
+      validate(value) {
+        validator.con;
+        if (!validator.isEmail(value)) {
+          throw new Error('Invalid email.');
+        }
+      },
+    },
+    password: {
+      type: String,
+      minlength: 6,
+      trim: true,
+      required: true,
+      validate(value) {
+        if (value === 'password') {
+          throw new Error('Password cannot be password.');
+        }
+      },
+    },
+    tokens: [
+      {
+        token: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+  },
+  {
+    timestamps: true,
+  }
+);
 
 userSchema.pre('remove', async function (next) {
   const user = this;
