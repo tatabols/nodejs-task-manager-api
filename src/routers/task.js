@@ -37,13 +37,21 @@ router.get('/tasks/:id', async (req, res) => {
 
 router.patch('/tasks/:id', async (req, res) => {
   try {
-    const task = await Task.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const bodyKeys = Object.keys(req.body);
+    const schemaKeys = Object.keys(Task.schema.tree);
+    const isValidInputKeys = bodyKeys.every((k) => schemaKeys.includes(k));
+
+    if (!isValidInputKeys) {
+      return res.status(500).send({ error: 'Invalid data.' });
+    }
+
+    const task = await Task.findById(req.params.id);
     if (!task) {
       return res.status(404).send();
     }
+
+    bodyKeys.map((field) => (task[field] = req.body[field]));
+    await task.save();
 
     res.send(task);
   } catch (error) {

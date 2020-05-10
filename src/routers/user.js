@@ -53,19 +53,19 @@ router.patch('/users/:id', async (req, res) => {
   try {
     const schemaKeys = Object.keys(User.schema.tree);
     const bodyKeys = Object.keys(req.body);
-    const isValidKeys = bodyKeys.every((k) => schemaKeys.includes(k));
+    const isValidInputKeys = bodyKeys.every((k) => schemaKeys.includes(k));
 
-    if (!isValidKeys) {
+    if (!isValidInputKeys) {
       return res.status(500).send({ message: 'Invalid data.' });
     }
 
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-      runValidators: true,
-      new: true,
-    });
+    const user = await User.findById(req.params.id);
     if (!user) {
       return res.status(404).send();
     }
+
+    bodyKeys.map((field) => (user[field] = req.body[field]));
+    await user.save();
 
     res.send(user);
   } catch (error) {
